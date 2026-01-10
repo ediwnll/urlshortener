@@ -131,3 +131,4 @@ logs/
 *.temp
 *.bak
 
+.github
