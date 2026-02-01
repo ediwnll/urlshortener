@@ -2,13 +2,124 @@ import { API_BASE } from '../constants'
 import type { ShortenedURL, URLAnalytics, BulkURLResponse } from '../types'
 
 /**
+ * Standardized API error response from backend
+ */
+export interface APIErrorResponse {
+  error: {
+    code: string
+    message: string
+    status: number
+    details?: Record<string, unknown>
+  }
+}
+
+/**
+ * Custom API error class with additional context
+ */
+export class APIError extends Error {
+  code: string
+  status: number
+  details?: Record<string, unknown>
+
+  constructor(response: APIErrorResponse) {
+    super(response.error.message)
+    this.name = 'APIError'
+    this.code = response.error.code
+    this.status = response.error.status
+    this.details = response.error.details
+  }
+
+  /**
+   * Check if error is a specific type
+   */
+  is(code: string): boolean {
+    return this.code === code
+  }
+
+  /**
+   * Check if error is a not found error
+   */
+  isNotFound(): boolean {
+    return this.code === 'URL_NOT_FOUND' || this.status === 404
+  }
+
+  /**
+   * Check if error is an expired URL error
+   */
+  isExpired(): boolean {
+    return this.code === 'URL_EXPIRED' || this.status === 410
+  }
+
+  /**
+   * Check if error is a rate limit error
+   */
+  isRateLimited(): boolean {
+    return this.code === 'RATE_LIMIT_EXCEEDED' || this.status === 429
+  }
+
+  /**
+   * Check if error is a validation error
+   */
+  isValidationError(): boolean {
+    return this.code === 'VALIDATION_ERROR' || this.status === 400
+  }
+}
+
+/**
+ * Parse error response from API
+ * @param response - The fetch response object
+ * @returns APIError with parsed error details
+ */
+async function parseErrorResponse(response: Response): Promise<APIError> {
+  try {
+    const data = await response.json()
+    
+    // Handle standardized error format
+    if (data.error && typeof data.error === 'object') {
+      return new APIError(data as APIErrorResponse)
+    }
+    
+    // Handle legacy error format (detail field)
+    if (data.detail) {
+      return new APIError({
+        error: {
+          code: 'ERROR',
+          message: typeof data.detail === 'string' ? data.detail : 'An error occurred',
+          status: response.status
+        }
+      })
+    }
+    
+    // Fallback for unknown error format
+    return new APIError({
+      error: {
+        code: 'UNKNOWN_ERROR',
+        message: 'An unexpected error occurred',
+        status: response.status
+      }
+    })
+  } catch {
+    // Failed to parse JSON response
+    return new APIError({
+      error: {
+        code: 'PARSE_ERROR',
+        message: `Request failed with status ${response.status}`,
+        status: response.status
+      }
+    })
+  }
+}
+
+/**
  * Fetch analytics data for a shortened URL
  * @param shortCode - The short code of the URL
  * @returns Analytics data including clicks, referrers, and time distributions
  */
 export async function getAnalytics(shortCode: string): Promise<URLAnalytics> {
   const response = await fetch(`${API_BASE}/api/urls/${shortCode}/analytics`)
-  if (!response.ok) throw new Error('Failed to fetch analytics')
+  if (!response.ok) {
+    throw await parseErrorResponse(response)
+  }
   return response.json()
 }
 
@@ -34,8 +145,7 @@ export async function shortenUrl(
     })
   })
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.detail || 'Failed to shorten URL')
+    throw await parseErrorResponse(response)
   }
   return response.json()
 }
@@ -49,7 +159,7 @@ export async function deleteUrl(shortCode: string): Promise<void> {
     method: 'DELETE'
   })
   if (!response.ok && response.status !== 404) {
-    throw new Error('Failed to delete URL')
+    throw await parseErrorResponse(response)
   }
 }
 
@@ -87,8 +197,7 @@ export async function bulkShortenUrls(
     })
   })
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.detail || 'Failed to shorten URLs')
+    throw await parseErrorResponse(response)
   }
   return response.json()
 }

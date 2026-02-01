@@ -1,7 +1,7 @@
 import type { ExpirationOption } from '../types'
 
 /** Base URL for API requests */
-export const API_BASE = 'http://localhost:8000'
+export const API_BASE = ''
 
 /** LocalStorage key for URL history */
 export const HISTORY_STORAGE_KEY = 'snip_url_history'

@@ -1,3 +1,6 @@
 export { Toast } from './Toast'
 export { Input } from './Input'
 export { Button } from './Button'
+export { ErrorDisplay, InlineError, ErrorFallback } from './ErrorDisplay'
+export type { ErrorDisplayProps, ErrorType, InlineErrorProps, ErrorFallbackProps } from './ErrorDisplay'
+export { Skeleton, SkeletonText, SkeletonBox } from './Skeleton'

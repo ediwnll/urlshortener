@@ -1,14 +1,25 @@
 import { useState } from 'react'
 import { EXPIRATION_OPTIONS, ALIAS_PATTERN } from '../../constants'
+import { ErrorDisplay } from '../ui/ErrorDisplay'
+
+/**
+ * Error state with additional context
+ */
+interface ErrorState {
+  message: string
+  code?: string
+  canRetry?: boolean
+}
 
 interface URLFormProps {
   onSubmit: (url: string, customAlias?: string, expiresInHours?: number | null) => void
   loading: boolean
-  error: string | null
+  error: ErrorState | null
+  onRetry?: () => void
 }
 
 /** URL shortening form with advanced options */
-export function URLForm({ onSubmit, loading, error }: URLFormProps) {
+export function URLForm({ onSubmit, loading, error, onRetry }: URLFormProps) {
   const [url, setUrl] = useState('')
   const [customAlias, setCustomAlias] = useState('')
   const [expiresIn, setExpiresIn] = useState<number | null>(null)
@@ -135,9 +146,16 @@ export function URLForm({ onSubmit, loading, error }: URLFormProps) {
         )}
       </form>
       {error && (
-        <p className="text-error text-sm mt-3 animate-shake">
-          {'>'} ERROR: {error}
-        </p>
+        <div className="mt-4">
+          <ErrorDisplay
+            type="error"
+            message={error.message}
+            code={error.code}
+            showRetry={error.canRetry && !!onRetry}
+            onRetry={onRetry}
+            showDismiss={false}
+          />
+        </div>
       )}
     </section>
   )

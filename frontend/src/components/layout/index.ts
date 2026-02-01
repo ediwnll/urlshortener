@@ -1,3 +1,5 @@
 export { Header } from './Header'
 export { Footer } from './Footer'
 export { HeroSection } from './HeroSection'
+export { NotFoundPage, ExpiredPage } from './NotFoundPage'
+export type { NotFoundPageProps } from './NotFoundPage'

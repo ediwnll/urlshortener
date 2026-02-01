@@ -1,5 +1,6 @@
 import type { ShortenedURL, URLAnalytics } from '../../types'
 import { formatHour, formatShortDate } from '../../utils/formatters'
+import { AnalyticsSkeleton } from './AnalyticsSkeleton'
 
 interface AnalyticsModalProps {
   isOpen: boolean
@@ -51,10 +52,7 @@ export function AnalyticsModal({ isOpen, onClose, url, analytics, loading }: Ana
         {/* Content */}
         <div className="p-6">
           {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block w-8 h-8 border-[3px] border-[#d4ff00] border-t-transparent animate-spin"></div>
-              <p className="text-[#f5f5f0]/50 font-mono mt-4">// LOADING DATA...</p>
-            </div>
+            <AnalyticsSkeleton />
           ) : analytics ? (
             <div className="space-y-8">
               {/* Total Clicks */}

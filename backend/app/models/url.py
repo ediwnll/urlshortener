@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.connection import Base
@@ -14,6 +14,11 @@ class URL(Base):
     """SQLAlchemy model for shortened URLs."""
 
     __tablename__ = "urls"
+    
+    # Composite indexes for common query patterns
+    __table_args__ = (
+        Index("ix_urls_is_active_created_at", "is_active", "created_at"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     short_code: Mapped[str] = mapped_column(
@@ -21,13 +26,13 @@ class URL(Base):
     )
     original_url: Mapped[str] = mapped_column(String(2048), nullable=False)
     custom_alias: Mapped[str | None] = mapped_column(
-        String(50), unique=True, nullable=True
+        String(50), unique=True, nullable=True, index=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=datetime.utcnow, nullable=False, index=True
     )
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     click_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationship to Click events

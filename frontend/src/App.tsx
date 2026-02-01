@@ -7,7 +7,7 @@ import type { ShortenedURL, URLAnalytics, BulkURLResponse } from './types'
 import { useToast, useHistory, useApi } from './hooks'
 
 // Services
-import { shortenUrl, deleteUrl, getAnalytics, bulkShortenUrls } from './services/api'
+import { shortenUrl, deleteUrl, getAnalytics, bulkShortenUrls, APIError } from './services/api'
 
 // Components
 import {
@@ -24,6 +24,15 @@ import {
 } from './components'
 
 /**
+ * Error state with additional context
+ */
+interface ErrorState {
+  message: string
+  code?: string
+  canRetry?: boolean
+}
+
+/**
  * Root application component
  * Composes all features and manages application-level state
  */
@@ -33,7 +42,7 @@ function App() {
 
   // Form state
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ErrorState | null>(null)
   const [result, setResult] = useState<ShortenedURL | null>(null)
   const [copied, setCopied] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -76,9 +85,18 @@ function App() {
       saveToHistory(data)
       addToast('URL shortened successfully!', 'success')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to shorten URL'
-      setError(message)
-      addToast(message, 'error')
+      if (err instanceof APIError) {
+        setError({
+          message: err.message,
+          code: err.code,
+          canRetry: !err.isValidationError()
+        })
+        addToast(err.message, 'error')
+      } else {
+        const message = err instanceof Error ? err.message : 'Failed to shorten URL'
+        setError({ message, canRetry: true })
+        addToast(message, 'error')
+      }
     } finally {
       setLoading(false)
     }
