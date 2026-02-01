@@ -132,3 +132,4 @@ logs/
 *.bak
 
 .github
+.requirements.txt

@@ -1,7 +1,7 @@
 import type { ExpirationOption } from '../types'
 
-/** Base URL for API requests */
-export const API_BASE = ''
+/** Base URL for API requests - empty string uses relative URLs (works with Nginx proxy) */
+export const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
 /** LocalStorage key for URL history */
 export const HISTORY_STORAGE_KEY = 'snip_url_history'
